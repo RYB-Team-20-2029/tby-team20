@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include <unistd.h>
 
+// NOTE: This implementation expects even parity and host routing
+// furthermore, the bus MUST BE PULLED HIGH AND LOW before transmission
+// since the packet 00|0000|0000|00|0 is a possibility.
+
 typedef union
 {
     struct
@@ -17,14 +21,18 @@ typedef union
 } DataPacket;
 
 // "memory"
-void send(int16_t a) {
+void send(uint16_t a) {
     // REPLACE WITH VENDOR IMPLEMENTATION!!
     return;
 }
 
-uint8_t parity(int16_t) {
-    //INOP
-    return;
+uint8_t parity(uint16_t w) {
+    w ^= w >> 8;
+    w ^= w >> 4;
+    w ^= w >> 2;
+    w ^= w >> 1;
+    // Even parity
+    return (uint8_t)(w & 1u);
 }
 
 
@@ -65,6 +73,25 @@ DataPacket force_execute_send(uint8_t addr, uint8_t dat, uint8_t trnd, uint8_t d
         send(COMB());
         return packet;
     }
+}
+
+DataPacket reconstruct_data_packet(uint16_t package, bool type) {
+    DataPacket packet = {0};
+    package = package << 0x3;
+    // data packet is 13 bits, we need to shift it. type defines if it is a control signal or not
+    if ((parity(COMB()) != package & 0x100) && !type) {
+        packet.fields.trend = 11;
+    } else {
+        if (type) {
+        } else {
+            packet.fields.address = package & 0x180; // first two bits
+            packet.fields.data = package & 0x780; // four bits after that
+            packet.fields.trend = package & 0x600; // two bits
+            packet.fields.parity = package & 0x100; // one bit
+        };
+    };
+
+
 }
 
 int main() {}
