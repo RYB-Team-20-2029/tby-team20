@@ -1,0 +1,45 @@
+# Purpose: keep IDE-generated build artefacts and OS noise out of the repository.
+# Owning module: management (mgmt/).
+
+# --- Xilinx Vitis / Vivado generated ---
+_ide/
+.Xil/
+.metadata/
+RemoteSystemsTempFiles/
+Debug/
+Release/
+*.jou
+*.str
+*.bit
+*.xsa
+*.hwh
+*.bif
+*.mmi
+*.runs/
+*.cache/
+*.hw/
+*.sim/
+*.ip_user_files/
+vivado*.backup.*
+
+# --- Build output ---
+*.o
+*.d
+*.a
+*.so
+*.elf
+*.map
+*.lst
+build/
+
+# --- Logs ---
+*.log
+# ...but session notes committed under docs/test-log/ are kept on purpose.
+!docs/test-log/*.log
+
+# --- OS noise ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+.*.swp
