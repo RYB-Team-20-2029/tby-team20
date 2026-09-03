@@ -36,7 +36,7 @@ Four PYNQ-Z2 boards, one module each, cooperating over the supplied backbone and
 ## Layout
 
 ```
-ryb-team20/
+tby-team20/
 ├── docs/
 │   ├── interface-contract.md      the wire format, in prose + open questions
 │   ├── coding-standard.md         the portability rule and the style rules

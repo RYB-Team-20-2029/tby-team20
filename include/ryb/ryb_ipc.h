@@ -9,10 +9,11 @@
 
 #define RYB_IPC_VERSION 0x0001 /* bump on any layout change */
 
-/* Bounds that the wire format guarantees. Producers clamp, consumers may assert. */
-#define RYB_BPM_MIN       60u
-#define RYB_BPM_MAX      240u
-#define RYB_BPM_NO_LOCK    0u  /* sentinel: sensor has no usable signal      */
+/* Bounds that the wire format guarantees. Producers clamp, consumers may assert.
+ * The BPM range itself lives in ryb_config.h as RYB_HEART_BPM_MIN/MAX and is
+ * deliberately not repeated here — one value, one definition. Only the wire
+ * sentinel belongs to the protocol. */
+#define RYB_BPM_NO_LOCK    0u /* sentinel: sensor has no usable signal */
 #define RYB_LOUDNESS_MIN   0u
 #define RYB_LOUDNESS_MAX 100u
 #define RYB_REGION_MIN     1u

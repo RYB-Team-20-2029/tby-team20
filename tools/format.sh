@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 if [ "${1:-}" = "--check" ]; then
-    git ls-files '*.c' '*.h' | xargs --no-run-if-empty clang-format --dry-run --Werror
+    git ls-files '*.c' '*.h' | xargs clang-format --dry-run --Werror
 else
-    git ls-files '*.c' '*.h' | xargs --no-run-if-empty clang-format -i
+    git ls-files '*.c' '*.h' | xargs clang-format -i
 fi
