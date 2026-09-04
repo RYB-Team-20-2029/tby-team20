@@ -99,7 +99,7 @@ Please consider what Demo 1 actually aims for. Its a system integration deadline
 These are graded constraints:
 
 - **Backbone only** We are not allowed to wire-in any inter-board cables outside of the backbone.
-- **C only** · **PYNQ-Z2 only**
+- **C only** and **PYNQ-Z2 only**
 - **PWM duty ≤ 90 %** Anything above 90% will automatically trip the cradle motor breaker.
 - Analog circuitry has to be on the breadboard, behind the RYB shield.
 - Max 24 V AC / 42 V DC never bypass the emergency stop.
