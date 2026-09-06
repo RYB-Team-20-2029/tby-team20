@@ -1,26 +1,24 @@
-# RYB Team 20 — Rock Your Baby
+# RYB Team 20 | Rock Your Baby
 
-Autonomous embedded system that calms a simulated baby in a motorised cradle.
 TU/e course **5ECW0**, academic year 2026–2027.
 
 ## The problem
 
-Two signals come out of the baby, and two go into the cradle:
+There are two core signals that can be sensed and manipulated:
 
 | Sensed from the baby | Driven to the cradle |
 |---|---|
 | Heart rate (60–240 BPM) | Rocking frequency (PWM) |
 | Crying loudness (0–100 %) | Rocking amplitude (PWM) |
 
-A hidden **5x5 stress matrix** maps each (F, A) motion pair to a stress level K9..K1. K9 sits at (F5, A5), K1 at (F1, A1). Exactly one path of moves descends from K9 to K1. A wrong move triggers a jump in baby state.
+A hidden 5x5 stress matrix maps each (F, A) motion pair to a stress level K9..K1. K9 sits at (F5, A5), K1 at (F1, A1). Exactly one path of moves descends from K9 to K1.
+In the condition where a wrong move has been made, the baby jumps to a different stress state.
 
-> crying volume is constant for 50 < S < 100 and only falls off below S = 50. Above that knee, loudness is not relevant as no discernible change in volume can be detected. This does not apply to the heart-rate monitor.
-
-The deliverable is a functional prototype.
+> crying volume is constant for 50 < S < 100 and only falls off below S = 50. Above that point, there can be no calculated difference and this cannot be used reliably.
 
 ## The four modules
 
-The published documents on Canvas outline a clear structural architecture to implement, using four PYNQ-Z2 boards ("Pink" boards), each running modules that communicate over the supplied PCB backbone.
+The published documents on Canvas outline a clear structural architecture to implement, using four PYNQ-Z2 boards ("Pink" boards), each are running modules that communicate over the supplied PCB interconnect.
 
 | Module | Responsibility | Prefix | |
 |---|---|---|---|
