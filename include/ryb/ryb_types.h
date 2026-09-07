@@ -1,5 +1,5 @@
 /* Purpose: shared enums and return codes used across all four RYB submodules.
- * Owning module: management (mgmt/) — see docs/interface-contract.md. */
+ * Owning module: management (mgmt/), see docs/interface-contract.md. */
 
 #ifndef RYB_TYPES_H
 #define RYB_TYPES_H

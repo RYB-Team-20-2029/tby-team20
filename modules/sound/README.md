@@ -1,40 +1,29 @@
 # sound
 
-**Owner: N/A**
-**Board:** PYNQ-Z2 #2 | **Branch prefix:** `snd/`
+Board: PYNQ-Z2 #2 | Branch prefix: `snd/` | Owners: see `CODEOWNERS`
 
-Microphone conditioning and loudness estimation which generates and sends a loudness percentage and general trend over time, publishes them to the decision module as `ryb_sound_msg_t`.
-
-## Responsibility
+Microphone conditioning and loudness estimation. Publishes a loudness percentage and a
+trend to the decision module.
 
 | In | Out |
 |---|---|
-| Microphone signal via the breadboard conditioning chain and the ADC | `ryb_sound_msg_t`, `loudness` (0..100 %), `trend`, `valid` |
+| Microphone signal, via the breadboard conditioning chain and the ADC | `ryb_sound_msg_t`: `loudness` (0..100 %), `trend`, `valid` |
 
-Also drives its own 1.54" LCD: current loudness, trend.
+Also drives its own 1.54" LCD: current loudness and trend.
 
-## Layout
+`src/app/` holds envelope and level estimation, smoothing and trend, and must build and
+pass its tests with `gcc` on a laptop. See `docs/coding-standard.md` §1.
 
-```
-src/main.c   init target <= 50 lines
-src/app/     envelope/level estimation, smoothing and general trend. Portable C, NO vendor headers.
-src/hal/     ADC, timer, backbone and the LCD driver
-src/ui/      LCD rendering
-include/     module-internal headers
-test/        host tests for src/app/
-```
+## The knee
 
-## Maybe consider when publishing
+Crying volume is constant for 50 < S < 100 and only falls off below S = 50, named as
+`RYB_STRESS_CRY_KNEE_PCT` in `ryb_config.h`. Resolution below the knee is the part that
+matters; above it, this module cannot distinguish stress levels and should not pretend
+otherwise.
 
-The doll's crying volume is constant for 50 < S < 100 and only falls off below S = 50
+## Open questions
 
-- Do not report "loudness unchanged" as "no progress", these are not valid program states for this submodule!
-- Resolution below S = 50 is the only part thats practically important, so the resolution only needs to be reliable between 0 - 50.
-
-`RYB_STRESS_CRY_KNEE_PCT` in `ryb_config.h` names the knee.
-
-## Known issues / open questions
-
-- Microphone input not decided (pre-amp gain, rectification, filtering).
-- Mapping from measured level to the 0..50 scale needs calibration against the actual doll. Consider making the calibration auto adjusting / relational to the BPM.
-- The cradle motor itself makes noise, maybe we might need pre-conditioning for motor noise rejection?
+- Microphone front end: pre-amp gain, rectification, filtering.
+- Mapping the measured level onto the 0..50 scale needs calibrating against the real
+  doll. Auto-calibration, possibly cross-checked against BPM, is worth considering.
+- The cradle motor makes noise of its own. Do we need to reject it?

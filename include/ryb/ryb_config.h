@@ -1,5 +1,5 @@
 /* Purpose: fixed electrical, signal and mapping constants for the RYB cradle.
- * Owning module: management (mgmt/) — values come from the 5ECW0 course brief. */
+ * Owning module: management (mgmt/). Values come from the 5ECW0 course brief. */
 
 #ifndef RYB_CONFIG_H
 #define RYB_CONFIG_H
@@ -31,7 +31,7 @@
  *
  * Regions are 1..5. Index the tables below with (region - 1).
  * Frequencies are in centihertz (Hz x 100) to keep float out of the drive
- * path — see docs/coding-standard.md §5.3.
+ * path, see docs/coding-standard.md §2.
  * ------------------------------------------------------------------------ */
 
 #define RYB_REGION_COUNT 5u
@@ -76,11 +76,11 @@
 #define RYB_STRESS_LEVEL_MAX  9u /* K9 = maximum */
 
 /* ------------------------------------------------------------------------
- * Pin assignments — NOT YET DECIDED
+ * Pin assignments: NOT YET DECIDED
  *
  * TODO(mgmt): fill in once the RYB shield pinout and the backbone connector
- * are fixed. Deliberately left as comments rather than placeholder #defines,
- * so that nothing can build against a wrong-but-plausible value.
+ * are fixed. Left as comments rather than placeholder #defines, so nothing can
+ * build against a wrong-but-plausible value.
  *
  *   TODO(hb):   wrist LED / photodiode ADC channel
  *   TODO(snd):  microphone front-end ADC channel

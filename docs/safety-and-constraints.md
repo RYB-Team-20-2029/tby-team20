@@ -1,83 +1,67 @@
 # Safety and Constraints
 
-**Owner:** "management" sub-team (`mgmt/`)
+Owner: management (`mgmt/`)
 
-There are two types of rules outlined here. Safety rules protect people and shared equipment, they are not negotiable and usually are not enforceable strictly in code. Next there are course constraints, breaking one costs marks even if the prototype works and we meet deadlines. All code that you are working on should have its own branches, which you shouldn't pull into the main branch without a PR (Pull Request) that someone from the "management" sub-team official organizes.
-
----
+Safety rules protect people and shared equipment and are not negotiable.
+Course constraints cost marks if broken, even if the prototype works.
 
 ## 1. Safety
 
-### Electrical
+**Electrical**
 
-- **Maximum 24 V AC / 42 V DC.** Nothing in RYB should need more then this. If you EVER find yourself thinking you need to go above it, you don't and shouldn't.
-- **Never bypass the cradle's emergency stop.** This will be a major issue if you do not follow it, and might even result in penalties. NEVER, not "just to check something".
-- The cradle drive is 12 V and must supply at least 0.8 A. The drive side as capable of hurting you and of destroying hardware, so be careful and keep an eye out.
+- Max 24 V AC / 42 V DC. Nothing in this project needs more. If you think you need more, you don't.
+- Never bypass the cradle's emergency stop. Not even to check something.
+- The cradle drive is 12 V at 0.8 A or more. It can hurt you and it can destroy hardware.
 
-### The setup is shared
+**The setup is shared.** Six complete setups for 42 teams. If we break something, we pay
+for it. So: do not move setups, do not remove the doll, do not unplug mains, and do not
+tape the wrist sensor on. Mounting it is a mechanical design problem.
 
-There are six complete setups which are used by 42 teams including us.
-If we break something, we pay for it as a team, so don't break or damage anything.
+**In the lab**
 
-To facilitate this, follow the following rules:
+- Power down the boards before changing breadboard wiring.
+- Check polarity before applying power. A reversed supply kills a PYNQ-Z2.
+- If something smells hot, sounds wrong, or the emergency light comes on: stop, power
+  down, and leave the hardware alone.
 
-- **Do not move setups.**
-- **Do not remove the doll.**
-- **Do not unplug mains.**
-- **Do not use tape to mount the wrist sensor.** This will require a mechanical design.
+## 2. The 90 % duty ceiling
 
-### In the lab
+PWM duty above 90 % trips the cradle's emergency breaker and ends the run. This is the
+one safety rule that code can enforce, so it is enforced in exactly one place:
 
-- Turn off all Pink boards before changing the breadboard wiring.
-- Check polarity before applying power. A reversed power supply can and will kill a PYNQ-Z2, its your hardware and you probably don't want to kill it.
-- If something smells hot, sounds wrong, or the emergency light comes on. stop! power down. Do not try touching or interacting with hardware once the power is removed.
+- `RYB_PWM_DUTY_MAX_PCT` in `include/ryb/ryb_config.h` is the only definition of the
+  number. Never retype `90`.
+- The clamp lives in the motor module's HAL, at the last point before the value reaches
+  the peripheral. A clamp sitting upstream of an arithmetic bug does not clamp. It does
+  not belong in the decision module.
+- Region 5 already tops out at 90 %. Any duty computed from something other than the
+  region table needs its own explicit clamp.
+- Test it on the host with out-of-range inputs before it ever runs on hardware.
 
----
-
-## 2. 90 % duty cycle
-
-**PWM duty cycle must never exceed 90 %.** Above it the cradle emergency breaker trips and the run is disqualified.
-
-This is the one safety-adjacent rule that *is* enforceable in code, be sure to follow it, specifically for the motor driver subteam:
-
-- `RYB_PWM_DUTY_MAX_PCT` in `include/ryb/ryb_config.h` is the single definition. I already wrote that definition in there, USE THAT! Don't redefine it as a different variable, the value is right there.
-- The clamp lives in the motor module's HAL, at the last point before the value reaches the peripheral. Never write it in the decision module, your PR WILL be rejected if it doesn't follow this!
-- Region 5 tops out at 90 % by design. Any path that can produce a duty cycle from something other than the region table must be clamped explicitly.
-- Test the clamp on the host with out-of-range inputs before we ever run it in hardware.
-
----
-
-## 3. Course constraints (graded)
+## 3. Graded constraints
 
 | Constraint | Detail |
 |---|---|
-| **Backbone only** | Boards communicate **only** through the supplied backbone. No extra wires, no direct board-to-board cabling, no jumper "just for the demo". This is  directly graded and reviewed. |
-| **C only** | No other language for the embedded software. |
-| **PYNQ-Z2 only** | Four boards are allowed, one per sub-module. No other hardware platform or computing hardware is accepted. |
-| **Duty <= 90 %** | See §2. |
-| **Circuits on breadboard** | Analog front ends are built on the supplied breadboard for sensor communication, behind the RYB shield's over voltage protection. |
-| **One module per board** | heartbeat, sound, decision, motor are all separate boards with separate responsibilities and subteams. |
+| Backbone only | Boards communicate only through the supplied backbone. No extra wires, not even for a demo. |
+| C only | No other language for the embedded software. |
+| PYNQ-Z2 only | Four boards, one per module. No other platform. |
+| Duty <= 90 % | See §2. |
+| Circuits on breadboard | Analog front ends go on the supplied breadboard, behind the RYB shield's overvoltage protection. |
+| One module per board | heartbeat, sound, decision and motor stay separate. |
 
 ## 4. Hardware per board
 
-- PYNQ-Z2 (Xilinx Zynq-7000)
-- RYB shield PCB w/ overvoltage protection
-- 1.54" LCD module (might or might not arrive by the first demo date.. Which is fine)
-- Breadboard for analog circuitry
-- Backbone connector
+PYNQ-Z2 (Zynq-7000), RYB shield PCB with overvoltage protection, 1.54" LCD module
+(may not arrive before Demo 1, which is fine), breadboard, backbone connector.
 
-## 5. Signal constants
+Electrical and signal constants live in `include/ryb/ryb_config.h`. Read them there
+rather than copying them into a document that can drift.
 
-Authoritative values live in `include/ryb/ryb_config.h`. Repeated here for reading away from the code:
+## 5. Booked slots
 
-- PWM carrier **1 kHz** with an amplitude of **12 V**, must supply **>= 0.8 A**
-- Duty ceiling **90 %**
-- Heart rate **60–240 BPM**; stress **10–100 %**
-- Crying volume is **constant for 50 < S < 100** and only falls off below S = 50
-- ECG bonus work: sampling rate justified against **Nyquist** with a front end scaled to **0–3.3 V**
+The setups and the digital twin are only available in booked slots, which is the whole
+reason for the portability rule in `docs/coding-standard.md` §1. Turn up knowing what
+you are testing, with the code building and the host tests passing.
 
-## 6. Booked slots
-
-The physical setups and the digital twin are shared and available only in booked slots. This is why `docs/coding-standard.md` §1 exists: everything that *can* be tested on a laptop *must* be, so that slot time isn't wasted by your shit code having control flow or logic issues day-of.
-
-Before a slot; know what you are testing, have it building, and have the host-side tests passing. Log what happened in `docs/test-log/` afterwards- including the failures! Don't lie, I can see when you don't submit any, and know its probably a lie.
+Afterwards, write up what happened in `docs/test-log/`, including the failures.
+A slot with no failures logged reads as a slot with nothing logged.
