@@ -1,5 +1,5 @@
-# Purpose: enforce the RYB Team 20 C formatting rules (docs/coding-standard.md §5.3).
-# Owning module: management (mgmt/) — changes require a PR against management-owned paths.
+# Purpose: enforce the RYB Team 20 C formatting rules (docs/coding-standard.md §2).
+# Owning module: management (mgmt/). Changes require a PR against management-owned paths.
 ---
 Language: Cpp
 BasedOnStyle: LLVM

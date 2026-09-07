@@ -1,20 +1,17 @@
 # Git Workflow
 
-**Owner:** management (`mgmt/`)
+Owner: management (`mgmt/`)
 
-Written assuming some readers are new to git. If you already know git, read §1 and §2 and skip to §6.
+## 1. The rules
 
----
+- `main` is protected. Everything arrives through a pull request.
+- One approval is required, from a reviewer outside the authoring pair. GitHub counts
+  approvals but does not know who wrote the code, so this part is on us.
+- Branch names and commit subjects carry a module prefix.
+- Never commit build output. `.gitignore` covers the known offenders; read
+  `git status` before committing anyway.
 
-## 1. The rules, in short
-
-- **`main` is protected.** Nobody pushes to it directly. Everything arrives through a pull request.
-- **One approval is required**, and it must come from **a reviewer outside the authoring pair**. GitHub cannot enforce that last part — it counts approvals, it does not know who wrote the code. It is on us.
-- **Branch names carry a module prefix**, so ten people's branches stay legible.
-- **Commit subjects name the module.**
-- **Never commit IDE-generated build output.** `.gitignore` covers the known offenders; check `git status` before you commit anyway.
-
-## 2. Branch prefixes
+## 2. Prefixes
 
 | Prefix | Module |
 |---|---|
@@ -22,111 +19,90 @@ Written assuming some readers are new to git. If you already know git, read §1 
 | `snd/` | sound |
 | `dec/` | decision |
 | `mot/` | motor |
-| `mgmt/` | management-owned paths: `include/ryb/`, `docs/`, root config files |
+| `mgmt/` | `include/ryb/`, `docs/`, root config files |
 
-Example: `hb/bpm-averaging`, `mgmt/ipc-add-checksum`.
+Branches look like `hb/bpm-averaging` or `mgmt/ipc-add-checksum`.
 
-## 3. Commit subjects
-
-`<prefix>: <imperative, lower case, no full stop>`
+Commit subjects are `<prefix>: <imperative, lower case, no full stop>`, under about
+70 characters:
 
 ```
 hb: fix BPM averaging window
 mot: clamp duty cycle at 90 percent
 dec: add panic-jump detection
-mgmt: bump IPC version for sender id
 ```
 
-Under ~70 characters. If you need more, add a blank line and a body explaining **why**. The diff already shows what.
+If that is not enough room, add a blank line and a body explaining why. The diff
+already shows what.
 
-## 4. The whole loop, as literal commands
-
-Once, on a new machine:
-
-```bash
-git clone https://github.com/RYB-Team-20-2029/tby-team20.git
-cd tby-team20
-git config user.name "Your Name"
-git config user.email "your@student.tue.nl"
-```
-
-Every time you start a piece of work:
+## 3. The loop
 
 ```bash
-# 1. start from an up-to-date main
-git checkout main
-git pull
-
-# 2. branch, with your module's prefix
+git checkout main && git pull
 git checkout -b hb/bpm-averaging
 
-# 3. ... edit files ...
+# ... edit ...
 
-# 4. see what you changed, and read it before staging
-git status
-git diff
-
-# 5. format C code before committing
+git status && git diff          # read it before you stage it
 ./tools/format.sh
-
-# 6. stage and commit
 git add src/app/hb_filter.c src/app/hb_filter.h
 git commit -m "hb: add sliding-window BPM average"
-
-# 7. push the branch (first push on a new branch needs -u)
 git push -u origin hb/bpm-averaging
-
-# 8. open the pull request
-#    either in the browser (the push prints a link), or:
-gh pr create --base main --title "hb: add sliding-window BPM average" --fill
 ```
 
-Then wait for one approval, and merge when you have it.
+Then open the PR from the link the push prints, and merge once you have an approval.
 
-Prefer `git add <specific files>` over `git add -A`. `git add -A` is how a 40 MB `.xsa` and someone's `_ide/` folder end up in the history.
+Prefer `git add <files>` over `git add -A`. `git add -A` is how a 40 MB `.xsa` and
+someone's `_ide/` folder end up in the history for good.
 
-## 5. When `main` has moved on
-
-If others merged while you were working:
+When `main` moves on under you:
 
 ```bash
-git checkout main
-git pull
+git checkout main && git pull
 git checkout hb/bpm-averaging
 git merge main
 ```
 
-Fix any conflicts, `git add` the fixed files, `git commit`, push again. We merge rather than rebase: rebasing rewrites history, and with ten people and shared branches, a bad rebase is a genuinely unpleasant afternoon.
+Fix conflicts, `git add` the fixed files, commit, push. We merge rather than rebase.
+Rebasing rewrites history, and with ten people on shared branches a bad rebase ruins
+an afternoon.
 
-## 6. Reviewing
+## 4. Reviewing
 
-Requesting a review of your own pair's work does not count. Find someone from another module — it is also the cheapest way to spread knowledge of the shared header across the team.
+Approving your own pair's work does not count. Ask someone from another module. It is
+also the cheapest way to spread knowledge of the shared header around the team.
 
-As a reviewer, check:
+Check, in order:
 
-1. **Does anything under `src/app/` include a vendor header?** This is the first thing to look for. See `docs/coding-standard.md` §1.
-2. **Does it touch `include/ryb/`?** Then every affected module owner acknowledges before merge, not just you.
+1. Vendor headers under `src/app/`. See `docs/coding-standard.md` §1.
+2. Anything touching `include/ryb/`. Every affected module owner acknowledges before
+   merge, not just you.
 3. Fixed-width types on anything crossing the wire.
 4. No `malloc`, no `float` in a timing-critical path.
-5. Any duty-cycle output clamped at 90 %.
+5. Duty-cycle output clamped, in the motor HAL. See `docs/safety-and-constraints.md` §2.
 6. Build artefacts in the diff.
 
-"Looks good" without opening the Files-changed tab is not an approval; it is a coin flip with extra steps.
+"Looks good" without opening the Files changed tab is not an approval.
 
-## 7. Common situations
+## 5. When it goes wrong
 
-**I committed to `main` by accident, before it was protected.**
+Committed to `main` by accident:
+
 ```bash
-git branch hb/my-work        # save the work on a branch
+git branch hb/my-work        # save the work
 git reset --hard origin/main # move main back
 git checkout hb/my-work
 ```
 
-**I committed a build artefact.**
+Committed a build artefact:
+
 ```bash
 git rm --cached path/to/artifact.xsa
-# add the pattern to .gitignore, then commit both changes
+# add the pattern to .gitignore, commit both
 ```
-If it is already pushed, say so in the team channel — large blobs stay in the history and removing them properly requires rewriting it.
 
-**I have no idea what state I am in.** `git status` first, then ask before typing anything with `--hard` or `--force` in it. Nothing is lost until someone forces it away.
+If it is already pushed, say so in the team channel. Large blobs stay in the history
+and removing them properly means rewriting it.
+
+No idea what state you are in: run `git status`, then ask before typing anything with
+`--hard` or `--force` in it. Nothing is lost until someone forces it away.

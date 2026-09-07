@@ -1,5 +1,5 @@
 /* Purpose: authoritative wire format for all traffic on the supplied backbone.
- * Owning module: management (mgmt/) — any edit is a PR that every affected
+ * Owning module: management (mgmt/). Any edit is a PR that every affected
  * module owner must acknowledge before merge. See docs/interface-contract.md. */
 
 #ifndef RYB_IPC_H
@@ -11,7 +11,7 @@
 
 /* Bounds that the wire format guarantees. Producers clamp, consumers may assert.
  * The BPM range itself lives in ryb_config.h as RYB_HEART_BPM_MIN/MAX and is
- * deliberately not repeated here — one value, one definition. Only the wire
+ * deliberately not repeated here: one value, one definition. Only the wire
  * sentinel belongs to the protocol. */
 #define RYB_BPM_NO_LOCK    0u /* sentinel: sensor has no usable signal */
 #define RYB_LOUDNESS_MIN   0u
@@ -44,10 +44,9 @@ typedef struct {
 } ryb_motion_cmd_t;
 
 /* TODO(mgmt): the framing that wraps these payloads on the backbone is not yet
- * decided — physical link type, byte order, whether a header carries
+ * decided: physical link type, byte order, whether a header carries
  * RYB_IPC_VERSION and a sender id (ryb_node_t), and whether a checksum is
- * needed. Tracked as open questions in docs/interface-contract.md. Nothing is
- * declared here until the four module owners agree, because a guess that ships
- * is a guess that four boards then have to un-ship. */
+ * needed. Tracked as open questions in docs/interface-contract.md, and nothing
+ * is declared here until the four module owners agree. */
 
 #endif /* RYB_IPC_H */

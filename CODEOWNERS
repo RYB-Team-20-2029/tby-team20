@@ -1,13 +1,12 @@
 # Purpose: map repository paths to their owning module for review routing.
 # Owning module: management (mgmt/).
 #
-# STATUS: PLACEHOLDER — team members have not been invited yet, so no real GitHub
-# handles appear below. The path structure is final; the owner replaces each @TBD
-# with real handles (or a team such as @RYB-Team-20-2029/heartbeat) after invites
-# go out. GitHub ignores commented lines, so this file is inert until then.
+# PLACEHOLDER: nobody has been invited yet, so the paths are final but the
+# handles are not. Replace each @TBD with a real handle or team once invites go
+# out. Commented lines are inert to GitHub, so this file does nothing until then.
 #
-# Rule of thumb: two owners per path (the authoring pair), and the approving
-# reviewer must come from outside that pair — see docs/git-workflow.md.
+# Two owners per path (the authoring pair); the approving reviewer comes from
+# outside it. See docs/git-workflow.md.
 
 # --- Management-owned paths: the wire format and the standards ---
 # /include/ryb/          @TBD @TBD
