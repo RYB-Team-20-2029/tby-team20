@@ -1,6 +1,6 @@
 # sound
 
-Owner: unassigned | Board: PYNQ-Z2 #2 | Branch prefix: `snd/`
+Board: PYNQ-Z2 #2 | Branch prefix: `snd/` | Owners: see `CODEOWNERS`
 
 Microphone conditioning and loudness estimation. Publishes a loudness percentage and a
 trend to the decision module.

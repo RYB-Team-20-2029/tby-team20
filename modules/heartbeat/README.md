@@ -1,6 +1,6 @@
 # heartbeat
 
-Owner: unassigned | Board: PYNQ-Z2 #1 | Branch prefix: `hb/`
+Board: PYNQ-Z2 #1 | Branch prefix: `hb/` | Owners: see `CODEOWNERS`
 
 Optical sensing of the wrist LED. Derives a BPM and a trend, publishes them to the
 decision module.

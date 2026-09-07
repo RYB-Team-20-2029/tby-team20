@@ -1,6 +1,6 @@
 # decision
 
-Owner: unassigned | Board: PYNQ-Z2 #3 | Branch prefix: `dec/`
+Board: PYNQ-Z2 #3 | Branch prefix: `dec/` | Owners: see `CODEOWNERS`
 
 The brain. Consumes heart rate and loudness, navigates the hidden 5x5 stress matrix,
 and commands the next motion region.

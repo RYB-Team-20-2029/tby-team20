@@ -78,4 +78,4 @@ Each needs an owner and a decision before Demo 1 on 15 Oct 2026.
 
 | Version | Date | Change | Acknowledged by |
 |---|---|---|---|
-| `0x0001` | 2026-09-03 | Initial contract: `ryb_heart_msg_t`, `ryb_sound_msg_t`, `ryb_motion_cmd_t`. Framing deliberately unspecified. | pending, members not yet invited |
+| `0x0001` | 2026-09-03 | Initial contract: `ryb_heart_msg_t`, `ryb_sound_msg_t`, `ryb_motion_cmd_t`. Framing deliberately unspecified. | management (mgmt/) |

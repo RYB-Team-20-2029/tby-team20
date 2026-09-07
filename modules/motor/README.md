@@ -1,6 +1,6 @@
 # motor
 
-Owner: unassigned | Board: PYNQ-Z2 #4 | Branch prefix: `mot/`
+Board: PYNQ-Z2 #4 | Branch prefix: `mot/` | Owners: see `CODEOWNERS`
 
 Turns region commands into the two PWM drive signals for the cradle.
 
