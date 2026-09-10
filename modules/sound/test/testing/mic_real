@@ -1,0 +1,18 @@
+#include <stdio.h>
+#include <math.h>
+#include <stdlib>
+
+//Define stuff
+
+//Read of sound into db(math) increase/decrease
+
+//db into level
+
+//db into output(or terminal)
+
+//Main code
+void main()
+{
+    return 0;
+}
+
