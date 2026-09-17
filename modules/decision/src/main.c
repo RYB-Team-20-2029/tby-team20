@@ -1,26 +1,23 @@
-/* Purpose: entry point and super-loop for the decision module.
- * Owning module: decision. */
+#include <stdio.h>
 
-/* Stress-matrix navigation -> next (F, A) region.
- *
- * PLACEHOLDER. The structure is fixed, the implementation is not written yet;
- * the module owner writes it once the design document is agreed.
- *
- * This file does init plus the super-loop and nothing else, aiming for under 50
- * lines. Everything it calls lives in src/hal/, src/app/ or src/ui/:
- *
- *     init hardware        (src/hal/)
- *     init display         (src/ui/)
- *     loop forever:
- *         read inputs      (src/hal/)
- *         compute          (src/app/, the part you can test on a laptop)
- *         drive outputs    (src/hal/)
- *         update display   (src/ui/)
- *
- * Vendor headers are allowed here and in src/hal/, never under src/app/.
- * See docs/coding-standard.md §1.
- *
- * TODO(dec): implement after the design document is agreed.
- * TODO(mgmt): backbone framing is undecided, see open questions 1, 2, 4 and 5
- *             in docs/interface-contract.md.
- */
+int main()
+{
+    int bpm, vol;
+    float s, sbpm, svol;
+    printf("Please enter BPM (60-240): ");
+    scanf("%d", &bpm);
+    printf("\nBPM: %d\nPlease enter volume (0-100%): ", bpm);
+    scanf("%d", &vol);
+    printf("\nVolume: %d", vol);
+    sbpm = bpm*.5 - 20;
+    svol = vol*.4 + 10;
+    printf("\nStress (BPM): %.1f  Stress (Volume): %.1f", sbpm, svol);
+    if(svol < 50){ //need to adjust/optimize
+        s = (sbpm+svol)*.5;
+    }
+    else{
+        s = sbpm;
+    }
+    
+    printf("\nStress level: %.1f", s);
+}
