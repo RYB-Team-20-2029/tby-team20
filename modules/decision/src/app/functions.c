@@ -3,7 +3,7 @@ void inputs() {
     scanf("%d", &bpm);
     printf("BPM: %d\nPlease enter volume (0-100%%): ", bpm);
     scanf("%d", &vol);
-    printf("Volume: %d\n", vol);
+    printf("Volume: %d\n", vol); //whats up
 }
 
 void stress_calculation (bpm, vol) {
