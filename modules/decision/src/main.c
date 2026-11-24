@@ -1,23 +1,26 @@
 #include <stdio.h>
+#include "./app/functions.c"
+//2 32 values needed, for frequency and amplitude. must translate to binary
+//merge binary values into one array and output that
 
-int main()
-{
+    int matrix[5][5] = {
+        1, 2, 3, 7, 9,
+        5, 4, 4, 6, 9,
+        6, 5, 5, 6, 9,
+        9, 8, 7, 7, 9,
+        9, 9, 8, 8, 9
+    };
+
     int bpm, vol;
     float s, sbpm, svol;
-    printf("Please enter BPM (60-240): ");
-    scanf("%d", &bpm);
-    printf("\nBPM: %d\nPlease enter volume (0-100%): ", bpm);
-    scanf("%d", &vol);
-    printf("\nVolume: %d", vol);
-    sbpm = bpm*.5 - 20;
-    svol = vol*.4 + 10;
-    printf("\nStress (BPM): %.1f  Stress (Volume): %.1f", sbpm, svol);
-    if(svol < 50){ //need to adjust/optimize
-        s = (sbpm+svol)*.5;
-    }
-    else{
-        s = sbpm;
-    }
-    
-    printf("\nStress level: %.1f", s);
+    int row = 4, col = 4;
+    int freq = 0, amp = 0;
+
+
+int main()
+{   
+   inputs();
+   // loop
+   stress_calculation(bpm, vol);
+   matrix_algorithm(s);
 }
