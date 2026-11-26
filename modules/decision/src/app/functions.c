@@ -1,3 +1,9 @@
+
+struct matrix_return {
+    int amp;
+    int freq;
+};
+
 void inputs() {
     printf("Please enter BPM (60-240): ");
     scanf("%d", &bpm);
@@ -6,7 +12,7 @@ void inputs() {
     printf("Volume: %d\n", vol); //whats up
 }
 
-void stress_calculation (bpm, vol) {
+struct matrix_return stress_calculation(int bpm, int vol) {
     float p_bpm = ((float)(bpm - 60) / 180)*100; //convert bpm to percentage value, the (float) cast is necessary to avoid the division always resulting in 0
     sbpm = 0.9*p_bpm + 10;
     svol = vol*0.4 + 10;
@@ -41,35 +47,37 @@ void stress_calculation (bpm, vol) {
         k=1;
     }
     printf("\nThe K level is: K%d\n", k);
-
+    return (struct matrix_return) { .amp = s, .freq = k };
 }
 
 
-void matrix_algorithm(s) {
-    /* Cycle through the matrix orderly via columns or rows. Then store in the matrix the K levels if the progression succeeds.
-    *   If the progression fails and the baby gets a panic jump, then skip that K-square for now and switch the cycle direction ( vertical vs horizontal)
+struct matrix_return matrix_algorithm(int k, int matrix[5][5]) {
+
+    //int k = stress_calc.freq;
+
+    int row = 4, col = 4;
+    int freq = 0, amp = 0;
+
+    int current = matrix[row][col];
+    printf("K%d at F%d, A%d\n", current, col + 1, row + 1);
+    if(k == matrix[row][col]){
+        printf("WE ARE HERE!^^^\n");
+        freq = col+1;
+        amp = row +1;
+    }
+    if(current == 1){
+        break;
+    }
+    if (row > 0 && matrix[row - 1][col] < current) {
+        row--;
+    }
+    else if (col > 0 && matrix[row][col - 1] < current) {
+        col--;
+    }
+
+    //printf("\nAmplitude: A%d", amp);
+    //printf("\nFrequency: F%d", freq);
     
-   while(1)
-    { */
-        int current = matrix[row][col];
-        printf("K%d at F%d, A%d\n", current, col + 1, row + 1);
-        if(k == matrix[row][col]){
-            printf("WE ARE HERE!^^^\n");
-            freq = col+1;
-            amp = row +1;
-        }
-        if(current == 1){
-            break;
-        }
-        if (row > 0 && matrix[row - 1][col] < current) {
-            row--;
-        }
-        else if (col > 0 && matrix[row][col - 1] < current) {
-            col--;
-        }
-   // }
-    printf("\nAmplitude: A%d", amp);
-    printf("\nFrequency: F%d", freq);
-    
-    printf("\n");
+    //printf("\n");
+    return (struct matrix_return) { .amp = amp, .freq = freq };
 }
