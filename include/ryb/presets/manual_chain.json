@@ -1,0 +1,79 @@
+{
+  "_readme": [
+    "Preset: the four boards wired by hand, one wire per hop plus GND.",
+    "Every board sends on Arduino pin AR1 and receives on AR2. Wire each board's AR1 to the",
+    "next board's AR2: heartbeat -> sound -> decision -> motor, plus GND between boards.",
+    "Until the modules' own programs exist, <module>_monitor sends a random value every 5 s.",
+    "Built into tools/make_preset_zips.ps1's zips as include/ryb/ryb_comms.json."
+  ],
+
+  "gpio": {
+    "base_address": "0x41200000",
+    "direction_settle_us": 10
+  },
+
+  "line": {
+    "bit_period_us": 500,
+    "drive": "push_pull",
+    "idle_sleep_us": 20,
+    "wiring": "point_to_point"
+  },
+
+  "thread": {
+    "realtime": true,
+    "priority": 50,
+    "cpu": 1
+  },
+
+  "monitor": {
+    "send_period_ms": 5000,
+    "values": "random"
+  },
+
+  "pins": {
+    "AR0": 0, "AR1": 1, "AR2": 2, "AR3": 3, "AR4": 4, "AR5": 5, "AR6": 6,
+    "AR7": 7, "AR8": 8, "AR9": 9, "AR10": 10, "AR11": 11, "AR12": 12, "AR13": 13,
+    "AR_SDA": 30, "AR_SCL": 31,
+    "RBPI40": 38, "RBPI37": 39, "RBPI38": 40, "RBPI35": 41, "RBPI36": 42, "RBPI33": 43,
+    "RBPI18": 44, "RBPI32": 45, "RBPI10": 46, "RBPI27": 47, "RBPI28": 48, "RBPI22": 49,
+    "RBPI23": 50, "RBPI24": 51, "RBPI21": 52, "RBPI26": 53, "RBPI19": 54, "RBPI31": 55,
+    "RBPI15": 56, "RBPI16": 57, "RBPI13": 58, "RBPI12": 59, "RBPI29": 60, "RBPI08": 61,
+    "RBPI07": 62, "RBPI05": 63
+  },
+
+  "lcd": {
+    "bl": "RBPI40",
+    "rst": "RBPI38",
+    "dc": "RBPI37",
+    "cs": "RBPI36",
+    "sclk": "RBPI35",
+    "mosi": "RBPI33"
+  },
+
+  "modules": {
+    "heartbeat": {
+      "address": 0,
+      "repeater": false,
+      "tx": "AR1",
+      "rx": []
+    },
+    "sound": {
+      "address": 1,
+      "repeater": true,
+      "tx": "AR1",
+      "rx": [ { "pin": "AR2", "from": ["heartbeat"] } ]
+    },
+    "decision": {
+      "address": 2,
+      "repeater": false,
+      "tx": "AR1",
+      "rx": [ { "pin": "AR2", "from": ["heartbeat", "sound"] } ]
+    },
+    "motor": {
+      "address": 3,
+      "repeater": false,
+      "tx": null,
+      "rx": [ { "pin": "AR2", "from": ["decision"] } ]
+    }
+  }
+}

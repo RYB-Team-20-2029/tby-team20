@@ -1,0 +1,99 @@
+{
+  "_readme": [
+    "RYB Comms bus configuration. CMake reads it at configure time and generates a config header",
+    "for the module being built; see include/ryb/README.md. Edit, then rebuild with",
+    "`cmake --build build`: CMake notices the change and re-reads this file.",
+    "Every board must build from the same version of this file, because they all have to agree on it.",
+    "Names under modules are the directories under modules/.",
+    "pins maps header pin names to io_switch numbers, which are also GPIO bit numbers (32..63 are",
+    "GPIO channel 2). The table is libpynq's pinmap.h for the TU/e io0.2.0 overlay: ARx is",
+    "Arduino digital pin x, RBPIx is pin x of the Raspberry Pi header."
+  ],
+  "_todo": [
+    "Placeholders until the team records each decision in the protocol guideline:",
+    "modules.*.tx / rx: which header pin, and so which backbone conductor, each hop uses.",
+    "line.bit_period_us: shared by every board; the guideline leaves bit timing open.",
+    "line.drive: the guideline's open_drain needs a pull-up on each lane. Measured on a PYNQ-Z2",
+    "with the TU/e io0.2.0 overlay, a released Arduino pin took 6-9 ms to read high again, so",
+    "open_drain fails without an external pull-up (about 10 kOhm to 3.3 V). Until one is fitted,",
+    "push_pull is the default; CMake refuses two modules transmitting on the same pin in that mode.",
+    "The chain is one way, heartbeat -> sound -> decision -> motor; the motor only receives.",
+    "lcd.mosi: the module's DIN was reported on header pin 34, which is ground on a Pi header;",
+    "RBPI33 next to it is assumed. Confirm on the board."
+  ],
+
+  "gpio": {
+    "base_address": "0x41200000",
+    "direction_settle_us": 10
+  },
+
+  "line": {
+    "bit_period_us": 500,
+    "drive": "push_pull",
+    "idle_sleep_us": 20
+  },
+
+  "thread": {
+    "realtime": true,
+    "priority": 50,
+    "cpu": 1
+  },
+
+  "pins": {
+    "AR0": 0, "AR1": 1, "AR2": 2, "AR3": 3, "AR4": 4, "AR5": 5, "AR6": 6,
+    "AR7": 7, "AR8": 8, "AR9": 9, "AR10": 10, "AR11": 11, "AR12": 12, "AR13": 13,
+    "AR_SDA": 30, "AR_SCL": 31,
+    "RBPI40": 38, "RBPI37": 39, "RBPI38": 40, "RBPI35": 41, "RBPI36": 42, "RBPI33": 43,
+    "RBPI18": 44, "RBPI32": 45, "RBPI10": 46, "RBPI27": 47, "RBPI28": 48, "RBPI22": 49,
+    "RBPI23": 50, "RBPI24": 51, "RBPI21": 52, "RBPI26": 53, "RBPI19": 54, "RBPI31": 55,
+    "RBPI15": 56, "RBPI16": 57, "RBPI13": 58, "RBPI12": 59, "RBPI29": 60, "RBPI08": 61,
+    "RBPI07": 62, "RBPI05": 63
+  },
+
+  "lcd": {
+    "_about": [
+      "RYB_Displ3 (Waveshare 1.54in, ST7789, 240x240) seated on the Raspberry Pi header.",
+      "For an LCD on the Arduino header, as libpynq wires it by default: bl AR10, rst AR11,",
+      "dc AR12, cs AR13, sclk AR_SCL, mosi AR_SDA."
+    ],
+    "bl": "RBPI40",
+    "rst": "RBPI38",
+    "dc": "RBPI37",
+    "cs": "RBPI36",
+    "sclk": "RBPI35",
+    "mosi": "RBPI33"
+  },
+
+  "modules": {
+    "heartbeat": {
+      "address": 0,
+      "repeater": false,
+      "tx": "AR2",
+      "rx": []
+    },
+    "sound": {
+      "address": 1,
+      "repeater": true,
+      "tx": "AR3",
+      "rx": [
+        { "pin": "AR2", "from": ["heartbeat"] }
+      ]
+    },
+    "decision": {
+      "address": 2,
+      "repeater": false,
+      "tx": "AR4",
+      "rx": [
+        { "pin": "AR3", "from": ["heartbeat", "sound"] }
+      ]
+    },
+    "motor": {
+      "address": 3,
+      "repeater": false,
+      "tx": null,
+      "rx": [
+        { "pin": "AR4", "from": ["decision"] }
+      ]
+    }
+  }
+}
