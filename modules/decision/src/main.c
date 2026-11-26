@@ -36,13 +36,6 @@ int matrix[5][5] = {
 };
 
 
-//int bpm, vol;
-//float s, sbpm, svol;
-//int row = 4, col = 4;
-//int freq = 0, amp = 0;
-
-
-
 int main(void)
 {   
     if (ryb_begin() != RYB_OK) {
