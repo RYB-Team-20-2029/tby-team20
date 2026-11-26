@@ -43,3 +43,6 @@ Thumbs.db
 desktop.ini
 *~
 .*.swp
+
+# --- Preset zips from tools/make_preset_zips.ps1 ---
+dist/

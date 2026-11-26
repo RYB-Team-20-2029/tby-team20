@@ -1,0 +1,230 @@
+RYB Comms — Protocol Guideline
+
+Oct 12, 2026 · @u_qJcW4gVNQjg6Dydvqra2mA
+
+Scope
+
+RYB Comms carries 13-bit packets between four fixed modules over a GPIO line. This document defines the packet layout, the field encodings, the parity rule and the behaviour a conforming implementation must show. It does not define the electrical layer or the bit timing.
+
+The caller supplies the sender address, the payload and, on an appended packet, the trend. The encoder supplies the parity bit. No caller sets parity.
+
+RYB bus · 4 modules, 3 links
+
+Addresses are fixed per module, so a receiver knows the source from the first two bits. The decision module is the only sender of command packets.
+
+Frame format
+
+Every packet is 13 bits, sent most significant bit first. Both packet types share the same length, the same leading 2-bit sender address and the same trailing parity bit, so a receiver can clock in 13 bits before it decides what it holds.
+
+Appended packet (+)
+
+| Field | Bit positions | Width | Holds |
+| Sender address | 12–11 | 2 | Which module sent it |
+| Data | 10–3 | 8 | Sensor value, 0–255 |
+| Trend | 2–1 | 2 | Increasing, decreasing or N/A |
+| Parity | 0 | 1 | Even parity over bits 12–1 |
+
+Command packet (U)
+
+| Field | Bit positions | Width | Holds |
+| Sender address | 12–11 | 2 | Which module sent it |
+| First data segment | 10–6 | 5 | Unsigned 0–31 |
+| Second data segment | 5–1 | 5 | Unsigned 0–31 |
+| Parity | 0 | 1 | Even parity over bits 12–1 |
+
+A command packet carries two 5-bit values and no trend field. The two segments are built from unsigned 16-bit inputs, because a C allocation is a byte at a time and neither value has its own type. The first segment is shifted left by 5 and the second is OR'd into the low bits, giving a 10-bit payload that occupies exactly the same positions as the data and trend fields of an appended packet.
+
+first  = 10101          second = 01010
+packed = 10101 01010    (first << 5) | second
+frame  = 10 10101010 10 p    addr, payload split 8 + 2, parity
+
+Splitting that payload as 8 + 2 gives data 10101010 and trend 10, which is why one receiver path decodes both types.
+
+Field definitions
+
+Sender address (2 bits). Fixed per module and never reassigned at runtime.
+
+| Address | Module | Sends |
+| 00 | #1 HB | Heart beat sensor, BPM, trend |
+| 01 | #2 MIC | Microphone sensor, volume, trend |
+| 10 | #3 Decision | Commands to the motor module |
+| 11 | #4 Motor | Motor controller state |
+
+Data (8 bits). An unsigned sensor value, 0–255. Hold it in a uint8_t: the type makes an out-of-range value impossible, so the encoder never has to check it.
+
+Trend (2 bits). Three defined states plus one reserved code.
+
+| Code | Meaning | Use |
+| 00 | Increasing | Value rising against the previous reading |
+| 01 | Decreasing | Value falling against the previous reading |
+| 10 | N/A | No trend available, e.g. the first reading after reset |
+| 11 | Undefined | Reserved. An encoder never emits it; a receiver treats it as a malformed packet |
+
+Hold this in an enum rather than a bool pair. Two separate booleans allow four states with no way to mark the fourth invalid.
+
+Data segments (5 bits each). Unsigned, 0–31. Each arrives as a uint16_t and is masked to 5 bits before packing.
+
+Parity (1 bit). Set by the encoder, never by the caller. It is not a parameter of the packing function.
+
+Parity
+
+The standard uses even parity: bit 0 is set so that the number of 1s across the whole 13-bit frame is even. It covers bits 12 to 1, which is every bit except parity itself.
+
+The cheapest way to produce it is a running XOR. Every time a data bit is placed, XOR it into an accumulator. When the last data bit is in, the accumulator holds the parity bit, and nothing ever has to count the 1s.
+
+A receiver XORs all 13 received bits. A non-zero result means the frame is corrupt and must be discarded.
+
+Confirmed: the command example on the slide is wrong. The appended example on the packet slide, 10 10101010 00, has five 1s, and its parity bit of 1 is correct for even parity. The command example, 10 10101 01010, has six 1s, so even parity gives 0, but the slide shows 1. That value is correct for odd parity instead. Even parity is the rule, so that slide needs correcting: its parity bit should read 0. This document assumes even parity throughout.
+
+On the wire
+
+Bits leave the sender most significant first, so the sender address arrives before anything else and the receiver knows who is talking after two bit periods. Parity arrives last.
+
+Pins are driven through memory-mapped I/O rather than a GPIO library. The process opens /dev/mem, maps one page at the controller's base address, and writes the registers directly: register 1 is direction, register 0 is data.
+
+int fd = open("/dev/mem", O_RDWR | O_SYNC);
+volatile uint32_t *gpio = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
+                               MAP_SHARED, fd, GPIO_ADDRESS);
+gpio[1] = 0;                  /* all pins outputs */
+gpio[0] = bit;                /* drive the data pin */
+
+This gives the lowest latency and no buffering between the program and the pin, and it needs no library beyond libc. The cost is that the process needs permission on /dev/mem and a wrong base address faults or writes to the wrong peripheral.
+
+The interface. There is no separate clock line. A module exposes two entry points and nothing else:
+
+- A send call. The caller passes a packet's fields to the API and the module transmits it.
+- A receive callback. The main program registers a function that the module calls when inbound data arrives.
+
+There is no bit clock, so the data rate is whatever the executing instructions and the I/O library achieve. The processor runs as fast as it can, and each module implementor owns the speed of their own code. The chain is a line rather than a loop, so a segment sends only after the one before it has. Packets are delimited by counting. The length is fixed at 13 bits and cannot vary, so a receiver takes 13 bits, hands them up, and treats the next bit it sees as the first bit of the next packet. Nothing separates two packets sent back to back.
+
+The line idles high and a sender pulls it down to transmit, which gives the receiver a second way to find the end of a packet. A line that stays high for longer than one packet takes is idle, so the receiver abandons whatever count it was holding and waits for the next pull-down. That recovers alignment after a lost bit without any framing bits. It is unambiguous because no valid packet is all 1s: bits 12 to 1 all set is twelve 1s, an even count, so even parity puts a 0 in bit 0.
+
+Every packet opens with a start bit. The sender pulls the line low before any data goes out, so the start of a packet is always a falling edge, even when the first data bit is a 1. A packet from address 10 or 11 is seen as high, then low for the start bit, then high again for its first data bit. The start bit is signalling and is not one of the 13 bits: a receiver arms on the falling edge, then counts 13.
+
+Still to be specified.
+
+- Required settling time after the direction register is written
+
+Physical layer
+
+The RYB course documents constrain the physical layer without specifying it. They fix the hardware and how boards may be connected, and leave the signalling details to the team. Both halves are recorded here.
+
+Fixed by the project documents
+
+- One PYNQ Z2 per sub-module, carrying the RYB shield and the 1.54 inch LCD module, mounted on a sub-module board. The code is C on the PYNQ; no other board or language is permitted.
+- Inter-board signals travel through the backbone. Cables or wires from PYNQ to PYNQ are not allowed, and no extra wires or connections may be added between sub-module boards.
+- Up to four sub-module boards sit in the backbone and every board's connections are identical, so one build of the communication code has to work in any slot.
+- The only cables that may be added to the backbone are the 12 V supply and the DC supply feeding the team's own circuits. The backbone-to-baby cables must not be touched.
+- Signalling stays at PYNQ IO levels, 3.3 V. The shield protects the PYNQ against overvoltage, and the project limits are 24 V AC and 42 V DC.
+
+Still a team decision. Record each choice here once it is made, because every board has to agree on it.
+
+- Which PYNQ IO pin carries the line, and the matching bit in the direction register
+- Where the pull-up sits and what value it has. Idle-high pull-down signalling implies open drain: a sender releases the line by setting its pin back to an input rather than driving it high, and one pull-up on the backbone lane holds the idle level. Two senders driving the same lane hard in opposite directions is a short, so this matters before anything is powered up.
+- Which backbone conductor each hop uses, and whether a hop is point to point or all four boards share one lane
+- The common ground reference between boards
+
+LCD. The shield's display headers drive the LCD, and every sub-module has to show its relevant data there. For the communication link that means the decoded fields of received packets, address, value and trend, visible and changing on each board's screen. The LCD shares the PYNQ with the bit loop, so a blocking screen refresh stretches the bit period: refresh from the main loop between packets, never inside the send or receive path.
+
+Reference implementation
+
+Two encoders are given. They produce identical frames, so pick whichever reads better to the people maintaining the module.
+
+Packed word. The frame is built in one 16-bit register with shifts and ORs, which is what the hardware would do anyway.
+
+typedef enum { TREND_INC = 0, TREND_DEC = 1, TREND_NA = 2 } trend_t;
+
+static uint8_t even_parity(uint16_t bits)
+{
+    uint8_t p = 0;
+    while (bits) { p ^= 1u; bits &= (uint16_t)(bits - 1u); }
+    return p;
+}
+
+int pack_appended(uint8_t addr, uint8_t data, trend_t trend, uint16_t *out)
+{
+    if (addr > 3 || (unsigned)trend > TREND_NA) return -1;
+
+    uint16_t frame = (uint16_t)(addr << 11) | (uint16_t)(data << 3)
+                   | (uint16_t)(trend << 1);
+    *out = frame | even_parity(frame);
+    return 0;
+}
+
+int pack_command(uint8_t addr, uint16_t first, uint16_t second, uint16_t *out)
+{
+    if (addr > 3 || first > 31 || second > 31) return -1;
+
+    uint16_t payload = (uint16_t)((first & 0x1F) << 5) | (second & 0x1F);
+    uint16_t frame   = (uint16_t)(addr << 11) | (uint16_t)(payload << 1);
+    *out = frame | even_parity(frame);
+    return 0;
+}
+
+Bit stack. A 13-byte array holds one bit per slot, with an index as the stack pointer. Each field is pushed MSB first and parity accumulates as it goes.
+
+static uint8_t stack[13];
+static int     sp;
+static uint8_t parity;
+
+static void push_field(uint8_t x, int count)
+{
+    for (int i = count - 1; i >= 0; i--) {
+        uint8_t bit = (x >> i) & 1;
+        stack[sp++] = bit;
+        parity ^= bit;
+    }
+}
+
+int build_appended(uint8_t addr, uint8_t data, uint8_t trend)
+{
+    sp = 0; parity = 0;
+    if (addr > 3) return -1;
+    push_field(addr, 2);
+    push_field(data, 8);
+    if (trend > 2) return -1;
+    push_field(trend, 2);
+    stack[sp++] = parity;
+    return 0;
+}
+
+Walk the array from index 0 to send address first. Popping it reverses the order and puts parity on the wire first, which is not what this standard specifies.
+
+Avoid C bitfields for the frame. Their bit order and padding are implementation defined, so a struct that works on one compiler can lay the fields out differently on another.
+
+Receiving and error handling
+
+A receiver checks four things, in this order, and discards the frame on the first failure.
+
+1. Thirteen bits were received.
+2. XOR of all 13 bits is 0.
+3. The sender address is one this module expects on that link.
+4. On an appended packet, the trend field is not 11.
+
+A discarded frame is not negatively acknowledged. The standard has no retransmission, so a receiver drops the packet and waits for the next one. Sensor modules send repeatedly, which makes a lost reading cheap. A lost command is not cheap, so the decision module should repeat a command until the motor module's next packet reflects it.
+
+A repeater forwards what it received and appends its own packet behind it, which is what makes the packets appendable: an appended packet is self-contained and carries no reference to whatever precedes it. A non-repeater consumes what it receives and sends only its own packets. Each module must be configured for one behaviour or the other, since a repeater that is wired as an endpoint silently drops upstream data.
+
+Conformance and test vectors
+
+An implementation conforms when it meets all of these.
+
+- [ ] Emits exactly 13 bits per packet, most significant bit first
+- [ ] Rejects an address above 3 and a trend code of 11 rather than truncating them
+- [ ] Computes parity itself and exposes no parity argument to the caller
+- [ ] Produces the vectors below bit for bit
+- [ ] Discards any received frame whose 13 bits do not XOR to 0
+- [ ] Holds the trend field in an enum, not in two booleans
+- [ ] Runs unchanged in any backbone slot, since every sub-module board's connections are identical
+- [ ] Uses no wires between PYNQ boards: every inter-board signal goes through the backbone
+- [ ] Shows the decoded fields of received packets on the LCD, updating as the values change
+
+Vectors. Parity is even in every row.
+
+| Type | Inputs | Frame (MSB first) | Hex |
+| Appended | addr 2, data 0xA5, trend increasing | 1010100101001 | 0x1529 |
+| Appended | addr 2, data 0xAA, trend increasing | 1010101010001 | 0x1551 |
+| Command | addr 2, first 21, second 10 | 1010101010100 | 0x1554 |
+| Appended | addr 0, data 0x00, trend N/A | 0000000000101 | 0x0005 |
+
+The second row is the appended example from the slides. The third is the command example, and it is the frame whose parity bit the slide shows as 1; the even-parity value is 0.

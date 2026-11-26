@@ -1,0 +1,22 @@
+{
+  "_readme": [
+    "Host test config: the heartbeat module's tx pin is wired to its own rx pin in the sim backend,",
+    "so appended packets go through the real bit loop and come back to hb_receive_heartbeat().",
+    "Uses push_pull so both drive modes are exercised."
+  ],
+  "gpio": { "base_address": "0x0", "direction_settle_us": 0 },
+  "line": { "bit_period_us": 2000, "drive": "push_pull", "idle_sleep_us": 0 },
+  "thread": { "realtime": false, "priority": 1, "cpu": -1 },
+  "pins": { "AR2": 2, "AR5": 5 },
+  "modules": {
+    "heartbeat": {
+      "address": 0,
+      "repeater": false,
+      "tx": "AR2",
+      "rx": [ { "pin": "AR5", "from": ["heartbeat"] } ]
+    },
+    "sound": { "address": 1, "repeater": false, "tx": null, "rx": [] },
+    "decision": { "address": 2, "repeater": false, "tx": null, "rx": [] },
+    "motor": { "address": 3, "repeater": false, "tx": null, "rx": [] }
+  }
+}

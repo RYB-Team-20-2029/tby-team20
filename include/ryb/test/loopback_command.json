@@ -1,0 +1,21 @@
+{
+  "_readme": [
+    "Host test config: the decision module's tx pin is wired to its own rx pin in the sim backend,",
+    "so command packets go through the real bit loop and come back to dec_receive_command()."
+  ],
+  "gpio": { "base_address": "0x0", "direction_settle_us": 0 },
+  "line": { "bit_period_us": 2000, "drive": "open_drain", "idle_sleep_us": 0 },
+  "thread": { "realtime": false, "priority": 1, "cpu": -1 },
+  "pins": { "AR3": 3, "AR4": 4 },
+  "modules": {
+    "heartbeat": { "address": 0, "repeater": false, "tx": null, "rx": [] },
+    "sound": { "address": 1, "repeater": false, "tx": null, "rx": [] },
+    "decision": {
+      "address": 2,
+      "repeater": false,
+      "tx": "AR4",
+      "rx": [ { "pin": "AR3", "from": ["decision"] } ]
+    },
+    "motor": { "address": 3, "repeater": false, "tx": null, "rx": [] }
+  }
+}
