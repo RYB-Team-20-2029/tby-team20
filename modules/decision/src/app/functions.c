@@ -1,23 +1,29 @@
+#include <stdio.h>
 
 struct matrix_return {
     int amp;
     int freq;
 };
 
-void inputs() {
+/* Legacy input code for manual value entry. (DOES NOT WORK)
+struct matrix_return inputs() {
+    int bpm;
+    int vol;
     printf("Please enter BPM (60-240): ");
     scanf("%d", &bpm);
     printf("BPM: %d\nPlease enter volume (0-100%%): ", bpm);
     scanf("%d", &vol);
     printf("Volume: %d\n", vol); //whats up
+    return (struct matrix_return) { .amp = vol, .freq = bpm };
 }
+*/
 
 struct matrix_return stress_calculation(int bpm, int vol) {
-    float p_bpm = ((float)(bpm - 60) / 180)*100; //convert bpm to percentage value, the (float) cast is necessary to avoid the division always resulting in 0
-    sbpm = 0.9*p_bpm + 10;
-    svol = vol*0.4 + 10;
 
-    s = (svol + sbpm)/2;
+    float p_bpm = ((float)(bpm - 60) / 180) * 100; //convert bpm to percentage value, the (float) cast is necessary to avoid the division always resulting in 0
+    float sbpm = 0.9 * p_bpm + 10;
+    float svol = vol * 0.4 + 10;
+    float s = (svol + sbpm) / 2;
     /*
     *   create a new line based on sbpm and svol, then find intersection with the two stress lines to generate s
     *   float xs = ((svol-sbpm)/(vol-p_bpm))+(sbpm-((svol-sbpm)/(vol-p_bpm))*p_bpm);
@@ -60,14 +66,21 @@ struct matrix_return matrix_algorithm(int k, int matrix[5][5]) {
 
     int current = matrix[row][col];
     printf("K%d at F%d, A%d\n", current, col + 1, row + 1);
+    
     if(k == matrix[row][col]){
         printf("WE ARE HERE!^^^\n");
         freq = col+1;
         amp = row +1;
     }
+
     if(current == 1){
-        break;
+        //break; You cant break out of an IF statement!!
+    	goto skip;
     }
+    
+
+    
+
     if (row > 0 && matrix[row - 1][col] < current) {
         row--;
     }
@@ -75,9 +88,11 @@ struct matrix_return matrix_algorithm(int k, int matrix[5][5]) {
         col--;
     }
 
+    skip:
+
     //printf("\nAmplitude: A%d", amp);
     //printf("\nFrequency: F%d", freq);
-    
     //printf("\n");
+
     return (struct matrix_return) { .amp = amp, .freq = freq };
 }

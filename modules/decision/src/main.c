@@ -1,11 +1,18 @@
 #include <stdio.h>
-#include "./app/functions.c"
 #include "ryb/ryb.h"
 #include <stdint.h>
 #include <unistd.h>
 //2 32 values needed, for frequency and amplitude. must translate to binary
 //merge binary values into one array and output that
+// function.c is compiled but specify functions and structs.
 
+struct matrix_return {
+    int amp;
+    int freq;
+};
+
+struct matrix_return stress_calculation(int bpm, int vol);
+struct matrix_return matrix_algorithm(int k, int matrix[5][5]);
 
 static uint8_t bpm;
 static uint8_t volume;
@@ -28,10 +35,10 @@ void dec_receive_sound(uint8_t value, ryb_trend_t trend)
 
 
 int matrix[5][5] = {
-    1, 2, 3, 7, 9,
-    5, 4, 4, 6, 9,
-    6, 5, 5, 6, 9,
-    9, 8, 7, 7, 9,
+    {1, 2, 3, 7, 9},
+    {5, 4, 4, 6, 9},
+    {6, 5, 5, 6, 9},
+    {9, 8, 7, 7, 9},
     9, 9, 8, 8, 9
 };
 
@@ -45,8 +52,6 @@ int main(void)
     for (;;) {
         ryb_update();
         if (loops++ % 50u == 0u && have_bpm && have_volume) {
-            uint16_t row;
-            uint16_t col;
             struct matrix_return stress_calc = stress_calculation(bpm, volume);
             struct matrix_return result = matrix_algorithm(stress_calc.freq, matrix);
             ryb_send_command(result.freq, result.amp);
